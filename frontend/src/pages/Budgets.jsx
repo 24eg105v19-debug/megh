@@ -3,16 +3,14 @@ import { format } from 'date-fns'
 import api from '../api'
 import Navbar from '../components/Navbar'
 
-const CATEGORIES = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Health', 'Education', 'Other']
-
 export default function Budgets() {
   const [budgets, setBudgets] = useState([])
-  const [statuses, setStatuses] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
-    category: 'Food',
-    limitAmount: '',
+    categoryId: '',
+    amount: '',
     startDate: format(new Date(), 'yyyy-MM-01'),
     endDate: format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'yyyy-MM-dd')
   })
@@ -20,23 +18,26 @@ export default function Budgets() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    loadCategories()
     fetchBudgets()
-    fetchStatuses()
   }, [])
 
-  const fetchBudgets = async () => {
+  const loadCategories = async () => {
     try {
-      const response = await api.get('/budgets')
-      setBudgets(response.data)
+      const response = await api.get('/categories/type/expense')
+      setCategories(response.data)
+      if (response.data.length > 0) {
+        setFormData(prev => prev.categoryId ? prev : { ...prev, categoryId: String(response.data[0].id) })
+      }
     } catch (err) {
       console.error(err)
     }
   }
 
-  const fetchStatuses = async () => {
+  const fetchBudgets = async () => {
     try {
-      const response = await api.get('/budgets/status')
-      setStatuses(response.data)
+      const response = await api.get('/budgets')
+      setBudgets(response.data)
     } catch (err) {
       console.error(err)
     } finally {
@@ -54,8 +55,8 @@ export default function Budgets() {
 
   const validate = () => {
     const newErrors = {}
-    if (!formData.category) newErrors.category = 'Category required'
-    if (!formData.limitAmount || parseFloat(formData.limitAmount) <= 0) newErrors.limitAmount = 'Valid amount required'
+    if (!formData.categoryId) newErrors.categoryId = 'Category required'
+    if (!formData.amount || parseFloat(formData.amount) <= 0) newErrors.amount = 'Valid amount required'
     if (!formData.startDate) newErrors.startDate = 'Start date required'
     if (!formData.endDate) newErrors.endDate = 'End date required'
     if (formData.startDate && formData.endDate && new Date(formData.startDate) > new Date(formData.endDate)) {
@@ -71,17 +72,21 @@ export default function Budgets() {
     setSubmitting(true)
     try {
       await api.post('/budgets', {
-        category: formData.category,
-        limitAmount: parseFloat(formData.limitAmount),
+        categoryId: parseInt(formData.categoryId, 10),
+        amount: parseFloat(formData.amount),
         startDate: formData.startDate,
         endDate: formData.endDate
       })
       setShowForm(false)
-      setFormData({ category: 'Food', limitAmount: '', startDate: format(new Date(), 'yyyy-MM-01'), endDate: format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'yyyy-MM-dd') })
+      setFormData({
+        categoryId: categories[0] ? String(categories[0].id) : '',
+        amount: '',
+        startDate: format(new Date(), 'yyyy-MM-01'),
+        endDate: format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), 'yyyy-MM-dd')
+      })
       fetchBudgets()
-      fetchStatuses()
     } catch (err) {
-      console.error(err)
+      setErrors({ form: err.response?.data?.message || 'Failed to create budget' })
     } finally {
       setSubmitting(false)
     }
@@ -92,14 +97,13 @@ export default function Budgets() {
     try {
       await api.delete(`/budgets/${id}`)
       fetchBudgets()
-      fetchStatuses()
     } catch (err) {
       console.error(err)
     }
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0)
   }
 
   return (
@@ -116,35 +120,37 @@ export default function Budgets() {
         {showForm && (
           <div className="card" style={{marginBottom: '2rem'}}>
             <h2 className="section-title" style={{marginBottom: '1rem'}}>Create New Budget</h2>
+            {errors.form && <div className="form-error" style={{marginBottom: '1rem'}}>{errors.form}</div>}
             <form onSubmit={handleSubmit} className="expense-form">
               <div className="form-group">
-                <label className="form-label" htmlFor="category">Category</label>
+                <label className="form-label" htmlFor="categoryId">Category</label>
                 <select
-                  id="category"
-                  name="category"
+                  id="categoryId"
+                  name="categoryId"
                   className="form-input"
-                  value={formData.category}
+                  value={formData.categoryId}
                   onChange={handleChange}
                   required
                 >
-                  {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </select>
+                {errors.categoryId && <p className="form-error">{errors.categoryId}</p>}
               </div>
               <div className="form-group">
-                <label className="form-label" htmlFor="limitAmount">Limit Amount</label>
+                <label className="form-label" htmlFor="amount">Limit Amount</label>
                 <input
                   type="number"
-                  id="limitAmount"
-                  name="limitAmount"
+                  id="amount"
+                  name="amount"
                   className="form-input"
-                  value={formData.limitAmount}
+                  value={formData.amount}
                   onChange={handleChange}
                   placeholder="500.00"
                   step="0.01"
                   min="0.01"
                   required
                 />
-                {errors.limitAmount && <p className="form-error">{errors.limitAmount}</p>}
+                {errors.amount && <p className="form-error">{errors.amount}</p>}
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="startDate">Start Date</label>
@@ -185,33 +191,36 @@ export default function Budgets() {
           <h2 className="section-title">Budget Status</h2>
           {loading ? (
             <div style={{textAlign: 'center', padding: '2rem', color: '#6b7280'}}>Loading...</div>
-          ) : statuses.length === 0 ? (
+          ) : budgets.length === 0 ? (
             <div style={{textAlign: 'center', padding: '3rem', color: '#9ca3af'}}>
               No budgets set yet. Click "Create Budget" to get started!
             </div>
           ) : (
             <div style={{display: 'flex', flexDirection: 'column', gap: '0.75rem'}}>
-              {statuses.map(budget => (
-                <div key={budget.category} className="budget-item">
-                  <div className="budget-header">
-                    <span className="budget-category">{budget.category}</span>
-                    <span style={{fontWeight: 600, color: budget.isOverBudget ? '#ef4444' : '#374151'}}>
-                      {formatCurrency(budget.spentAmount)} / {formatCurrency(budget.limitAmount)}
-                    </span>
+              {budgets.map(budget => {
+                const over = (budget.progressPercentage || 0) > 100
+                return (
+                  <div key={budget.id} className="budget-item">
+                    <div className="budget-header">
+                      <span className="budget-category">{budget.categoryName}</span>
+                      <span style={{fontWeight: 600, color: over ? '#ef4444' : '#374151'}}>
+                        {formatCurrency(budget.spentAmount)} / {formatCurrency(budget.amount)}
+                      </span>
+                    </div>
+                    <div className="budget-progress">
+                      <div className={`budget-progress-bar ${over ? 'danger' : (budget.progressPercentage || 0) > 80 ? 'warning' : 'safe'}`}
+                           style={{width: `${Math.min(budget.progressPercentage || 0, 100)}%`}}></div>
+                    </div>
+                    <div className="budget-details">
+                      <span>{(budget.progressPercentage || 0).toFixed(1)}% used</span>
+                      <span style={{color: over ? '#ef4444' : '#10b981'}}>
+                        {over ? 'Over budget' : 'On track'}
+                      </span>
+                      <span>{formatCurrency(budget.remainingAmount)} remaining</span>
+                    </div>
                   </div>
-                  <div className="budget-progress">
-                    <div className={`budget-progress-bar ${budget.isOverBudget ? 'danger' : budget.percentageUsed > 80 ? 'warning' : 'safe'}`}
-                         style={{width: `${Math.min(budget.percentageUsed || 0, 100)}%`}}></div>
-                  </div>
-                  <div className="budget-details">
-                    <span>{budget.percentageUsed?.toFixed(1) || 0}% used</span>
-                    <span style={{color: budget.isOverBudget ? '#ef4444' : '#10b981'}}>
-                      {budget.isOverBudget ? 'Over budget' : 'On track'}
-                    </span>
-                    <span>{formatCurrency(budget.remainingAmount)} remaining</span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>
@@ -223,9 +232,9 @@ export default function Budgets() {
               {budgets.map(budget => (
                 <div key={budget.id} className="budget-item" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                   <div>
-                    <span className="budget-category">{budget.category}</span>
+                    <span className="budget-category">{budget.categoryName}</span>
                     <div className="budget-details">
-                      <span>{formatCurrency(budget.limitAmount)}</span>
+                      <span>{formatCurrency(budget.amount)}</span>
                       <span>{format(new Date(budget.startDate), 'MMM d')} - {format(new Date(budget.endDate), 'MMM d, yyyy')}</span>
                     </div>
                   </div>

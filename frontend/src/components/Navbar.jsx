@@ -5,9 +5,7 @@ import {
   LayoutDashboard,
   Wallet,
   Target,
-  Settings,
   LogOut,
-  User,
   Menu,
   X,
   ChevronDown,
@@ -22,7 +20,6 @@ export default function Navbar() {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/expenses', label: 'Expenses', icon: Wallet },
-    { path: '/incomes', label: 'Incomes', icon: Wallet },
     { path: '/budgets', label: 'Budgets', icon: Target },
   ];
 
@@ -67,15 +64,6 @@ export default function Navbar() {
 
               {profileOpen && (
                 <div className="dropdown-menu">
-                  <Link to="/settings" className="dropdown-item" onClick={() => setProfileOpen(false)}>
-                    <User size={18} />
-                    Profile
-                  </Link>
-                  <Link to="/settings" className="dropdown-item" onClick={() => setProfileOpen(false)}>
-                    <Settings size={18} />
-                    Settings
-                  </Link>
-                  <div className="dropdown-divider" />
                   <button className="dropdown-item danger" onClick={logout}>
                     <LogOut size={18} />
                     Logout

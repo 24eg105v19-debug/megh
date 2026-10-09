@@ -3,15 +3,16 @@ import { format } from 'date-fns'
 import api from '../api'
 import Navbar from '../components/Navbar'
 
-const CATEGORIES = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Health', 'Education', 'Other']
+const RANGE = { start: '2000-01-01', end: '2100-12-31' }
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     amount: '',
-    category: 'Food',
+    categoryId: '',
     description: '',
     expenseDate: format(new Date(), 'yyyy-MM-dd')
   })
@@ -19,12 +20,25 @@ export default function Expenses() {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
+    loadCategories()
     fetchExpenses()
   }, [])
 
+  const loadCategories = async () => {
+    try {
+      const response = await api.get('/categories/type/expense')
+      setCategories(response.data)
+      if (response.data.length > 0) {
+        setFormData(prev => prev.categoryId ? prev : { ...prev, categoryId: String(response.data[0].id) })
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   const fetchExpenses = async () => {
     try {
-      const response = await api.get('/expenses/all')
+      const response = await api.get('/expenses', { params: RANGE })
       setExpenses(response.data)
     } catch (err) {
       console.error(err)
@@ -44,7 +58,7 @@ export default function Expenses() {
   const validate = () => {
     const newErrors = {}
     if (!formData.amount || parseFloat(formData.amount) <= 0) newErrors.amount = 'Valid amount required'
-    if (!formData.category) newErrors.category = 'Category required'
+    if (!formData.categoryId) newErrors.categoryId = 'Category required'
     if (!formData.expenseDate) newErrors.expenseDate = 'Date required'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -56,16 +70,16 @@ export default function Expenses() {
     setSubmitting(true)
     try {
       await api.post('/expenses', {
+        categoryId: parseInt(formData.categoryId, 10),
         amount: parseFloat(formData.amount),
-        category: formData.category,
         description: formData.description,
         expenseDate: formData.expenseDate
       })
       setShowForm(false)
-      setFormData({ amount: '', category: 'Food', description: '', expenseDate: format(new Date(), 'yyyy-MM-dd') })
+      setFormData({ amount: '', categoryId: categories[0] ? String(categories[0].id) : '', description: '', expenseDate: format(new Date(), 'yyyy-MM-dd') })
       fetchExpenses()
     } catch (err) {
-      console.error(err)
+      setErrors({ form: err.response?.data?.message || 'Failed to add expense' })
     } finally {
       setSubmitting(false)
     }
@@ -82,7 +96,7 @@ export default function Expenses() {
   }
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value || 0)
   }
 
   return (
@@ -99,6 +113,7 @@ export default function Expenses() {
         {showForm && (
           <div className="card" style={{marginBottom: '2rem'}}>
             <h2 className="section-title" style={{marginBottom: '1rem'}}>Add New Expense</h2>
+            {errors.form && <div className="form-error" style={{marginBottom: '1rem'}}>{errors.form}</div>}
             <form onSubmit={handleSubmit} className="expense-form">
               <div className="form-group">
                 <label className="form-label" htmlFor="amount">Amount</label>
@@ -117,17 +132,18 @@ export default function Expenses() {
                 {errors.amount && <p className="form-error">{errors.amount}</p>}
               </div>
               <div className="form-group">
-                <label className="form-label" htmlFor="category">Category</label>
+                <label className="form-label" htmlFor="categoryId">Category</label>
                 <select
-                  id="category"
-                  name="category"
+                  id="categoryId"
+                  name="categoryId"
                   className="form-input"
-                  value={formData.category}
+                  value={formData.categoryId}
                   onChange={handleChange}
                   required
                 >
-                  {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </select>
+                {errors.categoryId && <p className="form-error">{errors.categoryId}</p>}
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="description">Description (optional)</label>
@@ -176,7 +192,7 @@ export default function Expenses() {
               {expenses.map(expense => (
                 <div key={expense.id} className="expense-item">
                   <div className="expense-info">
-                    <span className="expense-category">{expense.category}</span>
+                    <span className="expense-category">{expense.categoryName}</span>
                     {expense.description && <span className="expense-description">{expense.description}</span>}
                     <span className="expense-date">{format(new Date(expense.expenseDate), 'MMM d, yyyy')}</span>
                   </div>
