@@ -14,6 +14,7 @@ import {
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
 import api from '../api'
+import Navbar from '../components/Navbar'
 import { format } from 'date-fns'
 
 ChartJS.register(
