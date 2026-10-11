@@ -450,6 +450,12 @@ input, select, textarea {
   border: 1px solid #F5B7B1;
 }
 
+.alert-info {
+  background: #EAF4FD;
+  color: #2C6FA8;
+  border: 1px solid #BBD8F0;
+}
+
 .period-tabs {
   display: flex;
   flex-wrap: wrap;

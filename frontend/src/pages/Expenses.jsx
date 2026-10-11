@@ -20,7 +20,7 @@ export default function Expenses() {
   const [submitting, setSubmitting] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [autoRetries, setAutoRetries] = useState(0)
-  const MAX_AUTO_RETRIES = 4
+  const MAX_AUTO_RETRIES = 6
 
   useEffect(() => {
     loadCategories()
@@ -137,10 +137,11 @@ export default function Expenses() {
         </div>
 
         {loadError && (
-          <div className="alert alert-error">
+          <div className={`alert ${autoRetries < MAX_AUTO_RETRIES ? 'alert-info' : 'alert-error'}`}>
             <span>
-              {loadError}
-              {autoRetries < MAX_AUTO_RETRIES ? ' Retrying automatically…' : ''}
+              {autoRetries < MAX_AUTO_RETRIES
+                ? 'Waking up the server… this can take up to a minute on the free tier. Retrying automatically…'
+                : loadError}
             </span>
             <button type="button" className="btn btn-secondary btn-sm" onClick={retryLoad}>Retry now</button>
           </div>

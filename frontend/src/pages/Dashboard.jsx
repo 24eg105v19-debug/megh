@@ -70,7 +70,7 @@ export default function Dashboard() {
   const [showIncomeModal, setShowIncomeModal] = useState(false)
   const [savingIncome, setSavingIncome] = useState(false)
   const [autoRetries, setAutoRetries] = useState(0)
-  const MAX_AUTO_RETRIES = 4
+  const MAX_AUTO_RETRIES = 6
 
   useEffect(() => {
     fetchDashboard()
@@ -146,7 +146,10 @@ export default function Dashboard() {
     return (
       <div className="container" style={{paddingTop: '3rem'}}>
         <div style={{textAlign: 'center'}}>
-          <div style={{fontSize: '1.5rem', color: '#6b7280'}}>Loading dashboard...</div>
+          <div style={{fontSize: '1.5rem', color: '#6b7280'}}>Loading dashboard…</div>
+          <div style={{marginTop: '0.5rem', color: '#9ca3af'}}>
+            If the server is waking up, this can take up to a minute.
+          </div>
         </div>
       </div>
     )
@@ -225,10 +228,11 @@ export default function Dashboard() {
         </div>
 
         {error && (
-          <div className="alert alert-error">
+          <div className={`alert ${autoRetries < MAX_AUTO_RETRIES ? 'alert-info' : 'alert-error'}`}>
             <span>
-              {error}
-              {autoRetries < MAX_AUTO_RETRIES ? ' Retrying automatically…' : ''}
+              {autoRetries < MAX_AUTO_RETRIES
+                ? 'Waking up the server… this can take up to a minute on the free tier. Retrying automatically…'
+                : error}
             </span>
             <button type="button" className="btn btn-secondary btn-sm" onClick={retryLoad}>Retry now</button>
           </div>

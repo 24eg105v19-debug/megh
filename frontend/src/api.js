@@ -19,7 +19,7 @@ api.interceptors.request.use((config) => {
 });
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 8;
 
 api.interceptors.response.use(
   (response) => response,
@@ -30,9 +30,10 @@ api.interceptors.response.use(
     const isColdStart = !error.response || status === 502 || status === 503 || status === 504 || (status && status >= 500);
 
     // Retry idempotent reads so the app survives the Render free-tier cold start.
+    // Delays 2,4,6,8,10... capped at 10s, so a read keeps trying for ~70s.
     if (method === 'get' && isColdStart && (config.__retryCount || 0) < MAX_RETRIES) {
       config.__retryCount = (config.__retryCount || 0) + 1;
-      await sleep(Math.min(2000 * config.__retryCount, 8000));
+      await sleep(Math.min(2000 * config.__retryCount, 10000));
       return api(config);
     }
 
