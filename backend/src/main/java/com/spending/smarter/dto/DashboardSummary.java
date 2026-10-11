@@ -20,4 +20,5 @@ public class DashboardSummary {
     private List<BudgetResponse> activeBudgets;
     private List<ExpenseResponse> recentExpenses;
     private List<IncomeResponse> recentIncomes;
+    private List<MonthlyTotal> monthlyTrend;
 }

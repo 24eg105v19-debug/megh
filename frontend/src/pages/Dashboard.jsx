@@ -11,10 +11,37 @@ import {
   PointElement,
   LineElement
 } from 'chart.js'
-import { Bar, Doughnut } from 'react-chartjs-2'
+import { Bar, Doughnut, Line } from 'react-chartjs-2'
 import api from '../api'
 import Navbar from '../components/Navbar'
 import { format } from 'date-fns'
+
+const PERIODS = [
+  { key: 'month', label: 'This Month' },
+  { key: '3m', label: 'Last 3 Months' },
+  { key: '6m', label: 'Last 6 Months' },
+  { key: 'year', label: 'This Year' },
+  { key: 'all', label: 'All Time' },
+]
+
+function periodRange(key) {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = now.getMonth()
+  const iso = (d) => format(d, 'yyyy-MM-dd')
+  switch (key) {
+    case 'month':
+      return { start: iso(new Date(y, m, 1)), end: iso(new Date(y, m + 1, 0)) }
+    case '3m':
+      return { start: iso(new Date(y, m - 2, 1)), end: iso(new Date(y, m + 1, 0)) }
+    case '6m':
+      return { start: iso(new Date(y, m - 5, 1)), end: iso(new Date(y, m + 1, 0)) }
+    case 'year':
+      return { start: iso(new Date(y, 0, 1)), end: iso(new Date(y, 11, 31)) }
+    default:
+      return { start: '2000-01-01', end: '2100-12-31' }
+  }
+}
 
 ChartJS.register(
   CategoryScale,
@@ -37,6 +64,8 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [period, setPeriod] = useState('month')
+  const [categorySummary, setCategorySummary] = useState([])
   const [income, setIncome] = useState('')
   const [showIncomeModal, setShowIncomeModal] = useState(false)
   const [savingIncome, setSavingIncome] = useState(false)
@@ -44,6 +73,10 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboard()
   }, [])
+
+  useEffect(() => {
+    loadCategoryBreakdown(period)
+  }, [period])
 
   const fetchDashboard = async () => {
     try {
@@ -58,9 +91,20 @@ export default function Dashboard() {
     }
   }
 
+  const loadCategoryBreakdown = async (key) => {
+    try {
+      const { start, end } = periodRange(key)
+      const response = await api.get('/expenses/by-category', { params: { start, end } })
+      setCategorySummary(response.data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   const retryLoad = () => {
     setLoading(true)
     fetchDashboard()
+    loadCategoryBreakdown(period)
   }
 
   const handleIncomeSubmit = async (e) => {
@@ -102,9 +146,33 @@ export default function Dashboard() {
   const monthlyBudget = summary?.monthlyBudget || 0
   const netSavings = summary?.netSavings || 0
   const remainingBudget = monthlyBudget - monthlyExpenses
-  const categorySummary = summary?.topExpenseCategories || []
   const activeBudgets = summary?.activeBudgets || []
   const recentExpenses = summary?.recentExpenses || []
+  const monthlyTrend = summary?.monthlyTrend || []
+
+  const trendData = {
+    labels: monthlyTrend.map(t => format(new Date(`${t.month}-01`), 'MMM yyyy')),
+    datasets: [
+      {
+        label: 'Expenses',
+        data: monthlyTrend.map(t => parseFloat(t.expenses || 0)),
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.12)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 3,
+      },
+      {
+        label: 'Income',
+        data: monthlyTrend.map(t => parseFloat(t.income || 0)),
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.12)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 3,
+      },
+    ],
+  }
 
   const categoryData = {
     labels: categorySummary.map(c => c.categoryName),
@@ -169,6 +237,28 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {monthlyTrend.length > 0 && (
+          <div className="card" style={{marginBottom: '1.5rem'}}>
+            <h2 className="section-title">Monthly Spending Trend</h2>
+            <div className="chart-container">
+              <Line data={trendData} options={{responsive: true, maintainAspectRatio: false}} />
+            </div>
+          </div>
+        )}
+
+        <div className="period-tabs">
+          {PERIODS.map(p => (
+            <button
+              key={p.key}
+              type="button"
+              className={`period-tab ${period === p.key ? 'active' : ''}`}
+              onClick={() => setPeriod(p.key)}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
         <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem'}}>
           <div className="card">
             <h2 className="section-title">Expenses by Category</h2>
@@ -177,7 +267,7 @@ export default function Dashboard() {
                 <Doughnut data={categoryData} options={{responsive: true, maintainAspectRatio: false}} />
               ) : (
                 <div style={{height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af'}}>
-                  No expenses recorded this month
+                  No expenses recorded in this period
                 </div>
               )}
             </div>

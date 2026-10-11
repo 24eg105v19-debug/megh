@@ -450,6 +450,35 @@ input, select, textarea {
   border: 1px solid #F5B7B1;
 }
 
+.period-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.period-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--gray-light);
+  background: var(--white);
+  color: var(--dark-light);
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.period-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.period-tab.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--white);
+}
+
 @media (max-width: 768px) {
   .chart-container {
     height: 250px;

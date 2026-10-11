@@ -8,12 +8,14 @@ import com.spending.smarter.dto.CategoryExpenseSummary;
 import com.spending.smarter.dto.BudgetResponse;
 import com.spending.smarter.dto.ExpenseResponse;
 import com.spending.smarter.dto.IncomeResponse;
+import com.spending.smarter.dto.MonthlyTotal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -53,7 +55,20 @@ public class DashboardService {
         
         List<ExpenseResponse> recentExpenses = expenseService.getByDateRange(userId, monthStart.minusMonths(1), monthEnd);
         List<IncomeResponse> recentIncomes = incomeService.getByDateRange(userId, monthStart.minusMonths(1), monthEnd);
-        
+
+        // Last 6 calendar months (oldest -> newest) for the spending trend chart.
+        List<MonthlyTotal> monthlyTrend = new ArrayList<>();
+        YearMonth trendStart = currentMonth.minusMonths(5);
+        for (int i = 0; i < 6; i++) {
+            YearMonth ym = trendStart.plusMonths(i);
+            BigDecimal inc = incomeRepository.getTotalIncomeByUserAndDateRange(user, ym.atDay(1), ym.atEndOfMonth());
+            BigDecimal exp = expenseRepository.getTotalExpensesByUserAndDateRange(user, ym.atDay(1), ym.atEndOfMonth());
+            monthlyTrend.add(new MonthlyTotal(
+                    ym.toString(),
+                    exp != null ? exp : BigDecimal.ZERO,
+                    inc != null ? inc : BigDecimal.ZERO));
+        }
+
         return DashboardSummary.builder()
                 .totalIncome(totalIncome)
                 .totalExpenses(totalExpenses)
@@ -65,6 +80,7 @@ public class DashboardService {
                 .activeBudgets(activeBudgets)
                 .recentExpenses(recentExpenses.stream().limit(10).collect(java.util.stream.Collectors.toList()))
                 .recentIncomes(recentIncomes.stream().limit(10).collect(java.util.stream.Collectors.toList()))
+                .monthlyTrend(monthlyTrend)
                 .build();
     }
 }
