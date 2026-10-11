@@ -43,6 +43,7 @@ https://github.com/24eg105v19-debug/megh/tree/main/backend
 | POST | `/api/auth/register` | Register → JWT |
 | POST | `/api/auth/login` | Login → JWT |
 | GET | `/api/categories` | All categories (public) |
+| GET | `/api/health` | Liveness check (public) |
 | GET | `/api/categories/type/{type}` | Categories by type (EXPENSE / INCOME) |
 | GET | `/api/expenses?start&end` | List expenses in date range |
 | POST | `/api/expenses` | Create expense |

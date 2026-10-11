@@ -46,6 +46,7 @@ megh/
 | POST | `/api/auth/register` | User registration → token |
 | POST | `/api/auth/login` | User login → token |
 | GET | `/api/categories` | All categories (public) |
+| GET | `/api/health` | Liveness check (public) |
 | GET | `/api/categories/type/{type}` | Categories by type |
 | GET | `/api/expenses` | List expenses (auth) — `start`, `end` params |
 | POST | `/api/expenses` | Create expense (auth) |

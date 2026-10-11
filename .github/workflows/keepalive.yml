@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Ping Render backend
         run: |
-          URL="https://spending-smarter-backend.onrender.com/api/categories"
+          URL="https://spending-smarter-backend.onrender.com/api/health"
           for i in 1 2 3 4 5; do
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 "$URL" || true)
             echo "attempt $i -> $code"
