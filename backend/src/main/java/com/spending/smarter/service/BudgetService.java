@@ -42,8 +42,8 @@ public class BudgetService {
             throw new ApiException("Budget already exists for this category and date range");
         }
 
-        BigDecimal spent = expenseRepository.getTotalExpensesByUserAndDateRange(
-                User.builder().id(userId).build(), request.getStartDate(), request.getEndDate());
+        BigDecimal spent = expenseRepository.getTotalExpensesByUserAndCategoryAndDateRange(
+                User.builder().id(userId).build(), category, request.getStartDate(), request.getEndDate());
         spent = spent != null ? spent : BigDecimal.ZERO;
 
         Budget budget = Budget.builder()

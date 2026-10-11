@@ -47,7 +47,7 @@ export default function Login() {
     <div className="auth-page">
       <div className="card auth-card">
         <h1 className="auth-title">Welcome Back</h1>
-        <p className="auth-subtitle">Sign in to your BudgetBuddy account</p>
+        <p className="auth-subtitle">Sign in to your Spending Smarter account</p>
         
         {error && <div className="form-error" style={{textAlign: 'center', marginBottom: '1rem'}}>{error}</div>}
         

@@ -60,6 +60,9 @@ https://github.com/24eg105v19-debug/megh/tree/main/backend
 | PUT | `/api/budgets/{id}` | Update budget |
 | DELETE | `/api/budgets/{id}` | Delete budget |
 | GET | `/api/dashboard` | Dashboard summary |
+| GET | `/api/tips` | List savings tips |
+| POST | `/api/tips/generate` | Generate personalized tips |
+| PUT | `/api/tips/{id}/read` | Mark a tip as read |
 | GET | `/api/user/profile` | Get profile |
 | PUT | `/api/user/profile` | Update profile (fullName, monthlyIncome, currency) |
 

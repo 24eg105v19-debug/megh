@@ -2,6 +2,7 @@ package com.spending.smarter.repository;
 
 import com.spending.smarter.model.Expense;
 import com.spending.smarter.model.User;
+import com.spending.smarter.model.Category;
 import com.spending.smarter.dto.CategoryExpenseSummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,6 +21,9 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     
     @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.user = :user AND e.expenseDate BETWEEN :start AND :end")
     BigDecimal getTotalExpensesByUserAndDateRange(@Param("user") User user, @Param("start") LocalDate start, @Param("end") LocalDate end);
+
+    @Query("SELECT SUM(e.amount) FROM Expense e WHERE e.user = :user AND e.category = :category AND e.expenseDate BETWEEN :start AND :end")
+    BigDecimal getTotalExpensesByUserAndCategoryAndDateRange(@Param("user") User user, @Param("category") Category category, @Param("start") LocalDate start, @Param("end") LocalDate end);
     
     @Query("SELECT new com.spending.smarter.dto.CategoryExpenseSummary(c.name, c.iconName, c.color, SUM(e.amount)) " +
            "FROM Expense e JOIN e.category c WHERE e.user = :user AND e.expenseDate BETWEEN :start AND :end " +

@@ -155,8 +155,8 @@ export default function Dashboard() {
   const monthlyIncome = summary?.monthlyIncome || 0
   const monthlyExpenses = summary?.monthlyExpenses || 0
   const monthlyBudget = summary?.monthlyBudget || 0
-  const netSavings = summary?.netSavings || 0
   const remainingBudget = monthlyBudget - monthlyExpenses
+  const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0
   const activeBudgets = summary?.activeBudgets || []
   const recentExpenses = summary?.recentExpenses || []
   const monthlyTrend = summary?.monthlyTrend || []
@@ -213,7 +213,13 @@ export default function Dashboard() {
       <main className="container" style={{padding: '2rem 1rem'}}>
         <div className="dashboard-header">
           <h1 className="dashboard-title">Dashboard</h1>
-          <button onClick={() => setShowIncomeModal(true)} className="btn btn-primary">
+          <button
+            onClick={() => {
+              setIncome(summary?.monthlyIncome && parseFloat(summary.monthlyIncome) > 0 ? String(parseFloat(summary.monthlyIncome)) : '')
+              setShowIncomeModal(true)
+            }}
+            className="btn btn-primary"
+          >
             Set Monthly Income
           </button>
         </div>
@@ -245,8 +251,8 @@ export default function Dashboard() {
           </div>
           <div className="stat-card">
             <div className="stat-label">Savings Rate</div>
-            <div className="stat-value positive">
-              {monthlyIncome > 0 ? `${((netSavings / monthlyIncome) * 100).toFixed(1)}%` : '0%'}
+            <div className={`stat-value ${savingsRate >= 0 ? 'positive' : 'negative'}`}>
+              {monthlyIncome > 0 ? `${savingsRate.toFixed(1)}%` : '0%'}
             </div>
           </div>
         </div>

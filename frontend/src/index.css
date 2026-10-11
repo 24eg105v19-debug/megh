@@ -479,6 +479,49 @@ input, select, textarea {
   color: var(--white);
 }
 
+.tips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tip-item {
+  background: var(--white);
+  border-left: 4px solid var(--primary);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.25rem;
+  transition: var(--transition);
+}
+
+.tip-item.read {
+  opacity: 0.6;
+}
+
+.tip-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.tip-text {
+  flex: 1;
+}
+
+.tip-category {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.35rem;
+}
+
+.tip-actions {
+  flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
   .chart-container {
     height: 250px;

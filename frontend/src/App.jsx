@@ -5,6 +5,7 @@ import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
 import Expenses from './pages/Expenses'
 import Budgets from './pages/Budgets'
+import Tips from './pages/Tips'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
         <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
+        <Route path="/tips" element={<ProtectedRoute><Tips /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </div>

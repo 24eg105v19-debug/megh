@@ -63,6 +63,9 @@ megh/
 | PUT | `/api/budgets/{id}` | Update budget (auth) |
 | DELETE | `/api/budgets/{id}` | Delete budget (auth) |
 | GET | `/api/dashboard` | Dashboard summary (auth) |
+| GET | `/api/tips` | List savings tips (auth) |
+| POST | `/api/tips/generate` | Generate personalized tips (auth) |
+| PUT | `/api/tips/{id}/read` | Mark a tip as read (auth) |
 | GET | `/api/user/profile` | Get profile (auth) |
 | PUT | `/api/user/profile` | Update profile (auth) |
 

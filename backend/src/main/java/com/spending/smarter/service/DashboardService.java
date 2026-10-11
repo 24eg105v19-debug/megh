@@ -3,6 +3,7 @@ package com.spending.smarter.service;
 import com.spending.smarter.model.User;
 import com.spending.smarter.repository.ExpenseRepository;
 import com.spending.smarter.repository.IncomeRepository;
+import com.spending.smarter.repository.UserRepository;
 import com.spending.smarter.dto.DashboardSummary;
 import com.spending.smarter.dto.CategoryExpenseSummary;
 import com.spending.smarter.dto.BudgetResponse;
@@ -23,6 +24,7 @@ import java.util.List;
 public class DashboardService {
     private final ExpenseRepository expenseRepository;
     private final IncomeRepository incomeRepository;
+    private final UserRepository userRepository;
     private final BudgetService budgetService;
     private final ExpenseService expenseService;
     private final IncomeService incomeService;
@@ -45,6 +47,16 @@ public class DashboardService {
         
         monthlyIncome = monthlyIncome != null ? monthlyIncome : BigDecimal.ZERO;
         monthlyExpenses = monthlyExpenses != null ? monthlyExpenses : BigDecimal.ZERO;
+
+        // Prefer the user's declared monthly income (set from the dashboard) when present.
+        BigDecimal declaredIncome = userRepository.findById(userId)
+                .map(User::getMonthlyIncome)
+                .filter(v -> v != null && v > 0)
+                .map(BigDecimal::valueOf)
+                .orElse(BigDecimal.ZERO);
+        if (declaredIncome.compareTo(BigDecimal.ZERO) > 0) {
+            monthlyIncome = declaredIncome;
+        }
         
         List<BudgetResponse> activeBudgets = budgetService.getActiveBudgets(userId, LocalDate.now());
         BigDecimal monthlyBudget = activeBudgets.stream()

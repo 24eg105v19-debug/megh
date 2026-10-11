@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Wallet,
   Target,
+  Lightbulb,
   LogOut,
   Menu,
   X,
@@ -21,6 +22,7 @@ export default function Navbar() {
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/expenses', label: 'Expenses', icon: Wallet },
     { path: '/budgets', label: 'Budgets', icon: Target },
+    { path: '/tips', label: 'Tips', icon: Lightbulb },
   ];
 
   return (
