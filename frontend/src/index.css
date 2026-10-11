@@ -432,6 +432,24 @@ input, select, textarea {
   width: 100%;
 }
 
+.alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.alert-error {
+  background: #FDEDEC;
+  color: var(--danger);
+  border: 1px solid #F5B7B1;
+}
+
 @media (max-width: 768px) {
   .chart-container {
     height: 250px;

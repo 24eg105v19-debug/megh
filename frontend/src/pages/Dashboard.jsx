@@ -36,6 +36,7 @@ const CHART_COLORS = [
 export default function Dashboard() {
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [income, setIncome] = useState('')
   const [showIncomeModal, setShowIncomeModal] = useState(false)
   const [savingIncome, setSavingIncome] = useState(false)
@@ -46,13 +47,20 @@ export default function Dashboard() {
 
   const fetchDashboard = async () => {
     try {
+      setError('')
       const response = await api.get('/dashboard')
       setSummary(response.data)
     } catch (err) {
       console.error(err)
+      setError('Could not load your dashboard. The server may be waking up — please retry.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const retryLoad = () => {
+    setLoading(true)
+    fetchDashboard()
   }
 
   const handleIncomeSubmit = async (e) => {
@@ -130,6 +138,13 @@ export default function Dashboard() {
             Set Monthly Income
           </button>
         </div>
+
+        {error && (
+          <div className="alert alert-error">
+            <span>{error}</span>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={retryLoad}>Retry</button>
+          </div>
+        )}
 
         <div className="stats-grid">
           <div className="stat-card">

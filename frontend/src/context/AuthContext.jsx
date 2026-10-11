@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI, userAPI } from '../api';
+import { authAPI, userAPI, warmUp } from '../api';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    warmUp();
     const initAuth = async () => {
       const token = localStorage.getItem('token');
       const userData = localStorage.getItem('user');
@@ -35,7 +36,7 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (name, email, password) => {
-    const response = await authAPI.register({ name, email, password });
+    const response = await authAPI.register({ fullName: name, email, password });
     const { token, ...userData } = response.data;
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));

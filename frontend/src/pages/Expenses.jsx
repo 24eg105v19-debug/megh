@@ -18,6 +18,7 @@ export default function Expenses() {
   })
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
     loadCategories()
@@ -33,6 +34,7 @@ export default function Expenses() {
       }
     } catch (err) {
       console.error(err)
+      setLoadError('Could not load categories. The server may be waking up — please retry.')
     }
   }
 
@@ -42,9 +44,17 @@ export default function Expenses() {
       setExpenses(response.data)
     } catch (err) {
       console.error(err)
+      setLoadError('Could not load your expenses. The server may be waking up — please retry.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const retryLoad = () => {
+    setLoadError('')
+    setLoading(true)
+    loadCategories()
+    fetchExpenses()
   }
 
   const handleChange = (e) => {
@@ -105,15 +115,32 @@ export default function Expenses() {
       <main className="container" style={{padding: '2rem 1rem'}}>
         <div className="dashboard-header">
           <h1 className="dashboard-title">Expenses</h1>
-          <button onClick={() => setShowForm(!showForm)} className="btn btn-primary">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="btn btn-primary"
+            disabled={categories.length === 0}
+            title={categories.length === 0 ? 'Loading categories...' : undefined}
+          >
             {showForm ? 'Cancel' : 'Add Expense'}
           </button>
         </div>
+
+        {loadError && (
+          <div className="alert alert-error">
+            <span>{loadError}</span>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={retryLoad}>Retry</button>
+          </div>
+        )}
 
         {showForm && (
           <div className="card" style={{marginBottom: '2rem'}}>
             <h2 className="section-title" style={{marginBottom: '1rem'}}>Add New Expense</h2>
             {errors.form && <div className="form-error" style={{marginBottom: '1rem'}}>{errors.form}</div>}
+            {categories.length === 0 && (
+              <div className="form-error" style={{marginBottom: '1rem'}}>
+                No categories available yet. Please wait while the server wakes up and retry.
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="expense-form">
               <div className="form-group">
                 <label className="form-label" htmlFor="amount">Amount</label>
@@ -171,8 +198,8 @@ export default function Expenses() {
               </div>
               <div style={{gridColumn: '1 / -1', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end'}}>
                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={submitting}>
-                  {submitting ? 'Adding...' : 'Add Expense'}
+                <button type="submit" className="btn btn-primary" disabled={submitting || categories.length === 0}>
+                  {submitting ? 'Adding...' : categories.length === 0 ? 'Loading...' : 'Add Expense'}
                 </button>
               </div>
             </form>

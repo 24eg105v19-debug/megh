@@ -7,6 +7,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 60000,
 });
 
 api.interceptors.request.use((config) => {
@@ -17,17 +18,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const MAX_RETRIES = 3;
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  async (error) => {
+    const config = error.config || {};
+    const status = error.response?.status;
+    const method = (config.method || 'get').toLowerCase();
+    const isColdStart = !error.response || (status && status >= 500);
+
+    // Retry idempotent reads so the app survives the Render free-tier cold start.
+    if (method === 'get' && isColdStart && (config.__retryCount || 0) < MAX_RETRIES) {
+      config.__retryCount = (config.__retryCount || 0) + 1;
+      await sleep(2000 * config.__retryCount);
+      return api(config);
+    }
+
+    if (status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
 );
+
+// Fire-and-forget warm-up so a sleeping backend is awake before the user interacts.
+export const warmUp = () => api.get('/categories').catch(() => {});
 
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),
