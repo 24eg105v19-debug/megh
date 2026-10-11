@@ -69,10 +69,21 @@ export default function Dashboard() {
   const [income, setIncome] = useState('')
   const [showIncomeModal, setShowIncomeModal] = useState(false)
   const [savingIncome, setSavingIncome] = useState(false)
+  const [autoRetries, setAutoRetries] = useState(0)
+  const MAX_AUTO_RETRIES = 4
 
   useEffect(() => {
     fetchDashboard()
   }, [])
+
+  useEffect(() => {
+    if (!error || autoRetries >= MAX_AUTO_RETRIES) return
+    const timer = setTimeout(() => {
+      setAutoRetries(c => c + 1)
+      retryLoad()
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [error, autoRetries])
 
   useEffect(() => {
     loadCategoryBreakdown(period)
@@ -209,8 +220,11 @@ export default function Dashboard() {
 
         {error && (
           <div className="alert alert-error">
-            <span>{error}</span>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={retryLoad}>Retry</button>
+            <span>
+              {error}
+              {autoRetries < MAX_AUTO_RETRIES ? ' Retrying automatically…' : ''}
+            </span>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={retryLoad}>Retry now</button>
           </div>
         )}
 

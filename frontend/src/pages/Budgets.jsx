@@ -17,11 +17,22 @@ export default function Budgets() {
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [loadError, setLoadError] = useState('')
+  const [autoRetries, setAutoRetries] = useState(0)
+  const MAX_AUTO_RETRIES = 4
 
   useEffect(() => {
     loadCategories()
     fetchBudgets()
   }, [])
+
+  useEffect(() => {
+    if (!loadError || autoRetries >= MAX_AUTO_RETRIES) return
+    const timer = setTimeout(() => {
+      setAutoRetries(c => c + 1)
+      retryLoad()
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [loadError, autoRetries])
 
   const loadCategories = async () => {
     try {
@@ -134,8 +145,11 @@ export default function Budgets() {
 
         {loadError && (
           <div className="alert alert-error">
-            <span>{loadError}</span>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={retryLoad}>Retry</button>
+            <span>
+              {loadError}
+              {autoRetries < MAX_AUTO_RETRIES ? ' Retrying automatically…' : ''}
+            </span>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={retryLoad}>Retry now</button>
           </div>
         )}
 
