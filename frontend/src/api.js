@@ -37,7 +37,7 @@ api.interceptors.response.use(
       return api(config);
     }
 
-    if (status === 401) {
+    if (status === 401 || status === 403) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       if (!window.location.pathname.startsWith('/login')) {

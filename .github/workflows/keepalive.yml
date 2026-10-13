@@ -1,8 +1,11 @@
 name: Keep backend awake
 
+# DISABLED automatic schedule on purpose.
+# Pinging every 5 minutes kept the Render free instance awake ~24/7, which
+# exhausted the 750 free instance-hours/month and got the service suspended
+# (503 / x-render-routing: hibernate-wake-error). Run this manually only when
+# you need to pre-warm the backend (e.g. before a demo).
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
